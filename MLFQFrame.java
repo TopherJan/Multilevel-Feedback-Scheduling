@@ -3,75 +3,70 @@ import javax.swing.JPanel;
 import java.awt.Color;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.util.ArrayList;
-import java.util.Random;
 import java.awt.event.ActionEvent;
 import javax.swing.SwingConstants;
 import java.awt.GridLayout;
-import java.awt.FlowLayout;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 public class MLFQFrame extends JFrame implements ActionListener {
 	private JPanel mainPanel = new JPanel(null);
 	private JPanel tablePanel = new JPanel();
-	static JPanel ganttPanel = new JPanel(null);
 	private JPanel algoPanel = new JPanel(null);
 	private JPanel infoPanel = new JPanel(null);
+	static JPanel ganttPanel = new JPanel(null);
 
-	JButton startButton = new JButton("START");
-	JButton stopButton = new JButton("RESET");
-	JButton exitButton = new JButton("EXIT");
+	private JButton startButton = new JButton("START");
+	private JButton stopButton = new JButton("RESET");
+	private JButton exitButton = new JButton("EXIT");
 
-	JLabel q1Label1 = new JLabel("Q1", SwingConstants.CENTER);
-	JLabel q2Label1 = new JLabel("Q2", SwingConstants.CENTER);
-	JLabel q3Label1 = new JLabel("Q3", SwingConstants.CENTER);
+	private JLabel q1Label1 = new JLabel("Q1", SwingConstants.CENTER);
+	private JLabel q2Label1 = new JLabel("Q2", SwingConstants.CENTER);
+	private JLabel q3Label1 = new JLabel("Q3", SwingConstants.CENTER);
 
 	static JPanel qPanel[] = new JPanel[3];
-	JTextField quanTextField[] = new JTextField[3];
+	private JTextField quanTextField[] = new JTextField[3];
 
 	private String[] rowLabelString = { "ID", "ARRIVAL", "BURST", "PRIORITY" };
 	private String[] colLabelString = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20" };
 
-	int tableRow = 21;
-	int tableColumn = 4;
-	int[] processID;
-	int[] arrivalTime;
-	int[] burstTime;
-	int[] priority;
-	int queues[];
-	int quantum[];
+	private int tableRow = 21;
+	private int tableColumn = 4;
+	private int[] processID;
+	private int[] arrivalTime;
+	private int[] burstTime;
+	private int[] priority;
+	private int queues[];
+	private int quantum[];
 
-	JPanel processNumPanel = new JPanel();
-	JLabel processNumLabel = new JLabel("Number of Processes: ");
-	JTextField processNumField = new JTextField("");
-	JButton enterButton = new JButton("ENTER");
-	JButton clearButton = new JButton("CLEAR");
+	private JPanel processNumPanel = new JPanel();
+	private JLabel processNumLabel = new JLabel("Number of Processes: ");
+	private JTextField processNumField = new JTextField("");
+	private JButton enterButton = new JButton("ENTER");
+	private JButton clearButton = new JButton("CLEAR");
 
-	JLabel queueNumLabel = new JLabel("Number of Queues: ");
-	JTextField queueNumField = new JTextField("");
-	JButton queueEnterButton = new JButton("ENTER");
-	JButton queueClearButton = new JButton("CLEAR");
+	private JLabel queueNumLabel = new JLabel("Number of Queues: ");
+	private JTextField queueNumField = new JTextField("");
+	private JButton queueEnterButton = new JButton("ENTER");
+	private JButton queueClearButton = new JButton("CLEAR");
 
-	JTextField[][] panelHolder = new JTextField[tableRow][tableColumn];
-	JLabel[][] label = new JLabel[tableRow][tableColumn];
+	private JTextField[][] panelHolder = new JTextField[tableRow][tableColumn];
+	private JLabel[][] label = new JLabel[tableRow][tableColumn];
 
-	String[] algorithmString = {"(FCFS) First Come First Serve", "(SJF) Shortest Job First", "(SRTF) Shortest Remaining Time First", "(NPP) Non-preemptive Priority", "(PP) Preemptive Priority","(RR) Round Robin" };
-	JComboBox algorithmDropbox[] = new JComboBox[3];
+	private String[] algorithmString = {"(FCFS) First Come First Serve", "(SJF) Shortest Job First", "(SRTF) Shortest Remaining Time First", "(NPP) Non-preemptive Priority", "(PP) Preemptive Priority","(RR) Round Robin" };
+	private String[] policy = {"Higher Before Lower", "Fixed Time Slots"};
+	private JComboBox algorithmDropbox[] = new JComboBox[3];
+	private JComboBox policyDropbox = new JComboBox(policy);
 
-	int numOfProcesses = 0, numOfQueues = 0;
-
+	private int numOfProcesses = 0, numOfQueues = 0;
+	private boolean isProcessLoaded = false;
+	private boolean isQueueLoaded = false;
 	static JLabel[] processLabel;
 
 	public MLFQFrame() {
@@ -87,6 +82,7 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		processNumPanel.setBounds(20, 10, 370, 30);
 		mainPanel.add(processNumPanel);
 
+		clearButton.setEnabled(false);
 		processNumPanel.setLayout(new BoxLayout(processNumPanel, BoxLayout.LINE_AXIS));
 		processNumPanel.add(processNumLabel);
 		processNumPanel.add(processNumField);
@@ -181,7 +177,7 @@ public class MLFQFrame extends JFrame implements ActionListener {
 				}
 			});
 
-			qPanel[i] = new JPanel();
+			qPanel[i] = new JPanel(null);
 		}
 
 		JLabel q1Label = new JLabel("Q1", SwingConstants.CENTER);
@@ -215,14 +211,14 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		qPanel[2].setBounds(30, 260, 2000, 128);
 		ganttPanel.add(qPanel[2]);
 
-		JScrollPane pane1 = new JScrollPane(qPanel[0]);
-		ganttPanel.add(pane1);
-
-		JScrollPane pane2 = new JScrollPane(qPanel[1]);
-		ganttPanel.add(pane2);
-
-		JScrollPane pane3 = new JScrollPane(qPanel[2]);
-		ganttPanel.add(pane3);
+		// JScrollPane pane1 = new JScrollPane(qPanel[0]);
+		// ganttPanel.add(pane1);
+		//
+		// JScrollPane pane2 = new JScrollPane(qPanel[1]);
+		// ganttPanel.add(pane2);
+		//
+		// JScrollPane pane3 = new JScrollPane(qPanel[2]);
+		// ganttPanel.add(pane3);
 
 		queueEnterButton.addActionListener(this);
 		queueClearButton.addActionListener(this);
@@ -233,6 +229,7 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		algoPanel.setBackground(new Color(200, 200, 200));
 		mainPanel.add(algoPanel);
 
+		queueClearButton.setEnabled(false);
 		queueNumLabel.setBounds(15,0,130,30);
 		queueNumField.setBounds(125,0,85,30);
 		queueEnterButton.setBounds(215,0,90,30);
@@ -247,52 +244,57 @@ public class MLFQFrame extends JFrame implements ActionListener {
 			}
 		});
 
+		algoPanel.add(policyDropbox);
+		policyDropbox.setBounds(10, 30, 390, 25);
+		policyDropbox.setEnabled(false);
+
 		algoPanel.add(queueNumLabel);
 		algoPanel.add(queueNumField);
 		algoPanel.add(queueEnterButton);
 		algoPanel.add(queueClearButton);
 
-		q1Label1.setBounds(0, 30, 405, 25);
+		q1Label1.setBounds(0, 60, 405, 25);
 		q1Label1.setOpaque(true);
 		q1Label1.setBackground(new Color(90, 90, 90));
 		algoPanel.add(q1Label1);
 
 		algoPanel.add(algorithmDropbox[0]);
-		algorithmDropbox[0].setBounds(10, 60, 200, 25);
+		algorithmDropbox[0].setBounds(10, 90, 200, 25);
 		algorithmDropbox[0].setEnabled(false);
 
 		algoPanel.add(quanTextField[0]);
-		quanTextField[0].setBounds(300, 60, 100, 25);
+		quanTextField[0].setBounds(300, 90, 100, 25);
 		quanTextField[0].setEnabled(false);
 
-		q2Label1.setBounds(0, 110, 405, 25);
+		q2Label1.setBounds(0, 130, 405, 25);
 		q2Label1.setOpaque(true);
 		q2Label1.setBackground(new Color(90, 90, 90));
 		algoPanel.add(q2Label1);
 
 		algoPanel.add(algorithmDropbox[1]);
-		algorithmDropbox[1].setBounds(10, 140, 200, 25);
+		algorithmDropbox[1].setBounds(10, 160, 200, 25);
 		algorithmDropbox[1].setEnabled(false);
 
 		algoPanel.add(quanTextField[1]);
-		quanTextField[1].setBounds(300, 140, 100, 25);
+		quanTextField[1].setBounds(300, 160, 100, 25);
 		quanTextField[1].setEnabled(false);
 
-		q3Label1.setBounds(0, 190, 405, 25);
+		q3Label1.setBounds(0, 195, 405, 25);
 		q3Label1.setOpaque(true);
 		q3Label1.setBackground(new Color(90, 90, 90));
 		algoPanel.add(q3Label1);
 
 		algoPanel.add(algorithmDropbox[2]);
-		algorithmDropbox[2].setBounds(10, 220, 200, 25);
+		algorithmDropbox[2].setBounds(10, 225, 200, 25);
 		algorithmDropbox[2].setEnabled(false);
 
 		algoPanel.add(quanTextField[2]);
-		quanTextField[2].setBounds(300, 220, 100, 25);
+		quanTextField[2].setBounds(300, 225, 100, 25);
 		quanTextField[2].setEnabled(false);
 
 		algoPanel.add(startButton);
 		startButton.setBounds(10, 260, 120, 40);
+		startButton.setEnabled(false);
 
 		algoPanel.add(stopButton);
 		stopButton.setBounds(140, 260, 120, 40);
@@ -300,6 +302,7 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		algoPanel.add(exitButton);
 		exitButton.setBounds(270, 260, 120, 40);
 
+		policyDropbox.addActionListener(this);
 		startButton.addActionListener(this);
 		exitButton.addActionListener(this);
 		stopButton.addActionListener(this);
@@ -321,18 +324,31 @@ public class MLFQFrame extends JFrame implements ActionListener {
 	public void enterQueue(int num){
 		for (int m = 0; m < num; m++) {
 			algorithmDropbox[m].setEnabled(true);
-			quanTextField[m].setEnabled(true);
+			quanTextField[m].setEnabled(false);
+		}
+		queueEnterButton.setEnabled(false);
+		queueClearButton.setEnabled(true);
+		policyDropbox.setEnabled(true);
+
+		isQueueLoaded = true;
+		if(isProcessLoaded && isQueueLoaded){
+			startButton.setEnabled(true);
 		}
 	}
 
 	public void resetQueue(){
 		for(int m = 0; m < 3; m++){
 			algorithmDropbox[m].setSelectedIndex(0);
-			quanTextField[m].setText("");
+			quanTextField[m].setText("Quantum");
 			algorithmDropbox[m].setEnabled(false);
 			quanTextField[m].setEnabled(false);
 		}
 		queueNumField.setText("");
+		isQueueLoaded = false;
+		startButton.setEnabled(false);
+		queueEnterButton.setEnabled(true);
+		queueClearButton.setEnabled(false);
+		policyDropbox.setEnabled(false);
 		queueNumField.setEnabled(true);
 	}
 
@@ -341,6 +357,13 @@ public class MLFQFrame extends JFrame implements ActionListener {
 			for (int n = 1; n < tableColumn; n++) {
 				panelHolder[m][n].setEnabled(true);
 			}
+		}
+		enterButton.setEnabled(false);
+		clearButton.setEnabled(true);
+
+		isProcessLoaded = true;
+		if(isProcessLoaded && isQueueLoaded){
+			startButton.setEnabled(true);
 		}
 	}
 
@@ -352,6 +375,10 @@ public class MLFQFrame extends JFrame implements ActionListener {
 			}
 		}
 		processNumField.setText("");
+		isProcessLoaded = false;
+		startButton.setEnabled(false);
+		enterButton.setEnabled(true);
+		clearButton.setEnabled(false);
 		processNumField.setEnabled(true);
 	}
 
@@ -391,7 +418,27 @@ public class MLFQFrame extends JFrame implements ActionListener {
 			}
 		}
 
-		new FCFS(processID, arrivalTime, burstTime);
+		schedulingAlgo();
+	}
+
+	public void schedulingAlgo(){
+		for(int i = 0; i < numOfQueues; i++){
+			if(queues[i] == 0){
+				new FCFS(processID, arrivalTime, burstTime, i);
+			}
+			else if(queues[i] == 1){
+				new SJF(processID, arrivalTime, burstTime, i);
+			}
+			else if(queues[i] == 2){
+				new SRTF(processID, arrivalTime, burstTime, i);
+			}
+			else if(queues[i] == 3){
+				new NP(processID, arrivalTime, burstTime, priority, i);
+			}
+			else if(queues[i] == 4){
+				new PP(processID, arrivalTime, burstTime, priority, i);
+			}
+		}
 	}
 
 	@Override
@@ -407,6 +454,12 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		if(event.getSource() == stopButton){
 			resetTable();
 			resetQueue();
+			for(int i = 0; i < numOfQueues; i++){
+				qPanel[i].removeAll();
+				mainPanel.repaint();
+				mainPanel.revalidate();
+			}
+
 		}
 
 		if(event.getSource() == enterButton){
@@ -435,6 +488,17 @@ public class MLFQFrame extends JFrame implements ActionListener {
 
 		if(event.getSource() == queueClearButton){
 			resetQueue();
+		}
+
+		if(event.getSource() == policyDropbox){
+			for(int i = 0; i < numOfQueues; i++){
+				if(policyDropbox.getSelectedIndex() == 1){
+					quanTextField[i].setEnabled(true);
+				}
+				else if(policyDropbox.getSelectedIndex() == 0){
+					quanTextField[i].setEnabled(false);
+				}
+			}
 		}
 	}
 }

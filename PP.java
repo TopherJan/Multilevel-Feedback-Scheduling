@@ -1,149 +1,104 @@
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Collections;
 import javax.swing.JLabel;
-import java.awt.Color;
-import javax.swing.SwingConstants;
-import javax.swing.JFrame;
-
 
 public class PP {
-	
-	static ArrayList<Integer> p2 = new ArrayList();
+	private int[] arrivalTime;
+	private int[] processID;
+	private int[] burstTime;
+	private int[] priority;
+	private int numOfProcesses;
+	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
+	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
+	float avgwt = 0, avgtt = 0, avgrt = 0;
 
-	public PP(int[] process, int[] arrivalTime, int[] burstTime, int[] priority, int size){
-		
-/*		Scanner input = new Scanner(System.in);
-	
-		System.out.print("Enter number of processes: ");
-		int size = input.nextInt();
-	
-	
-		
-    
-		System.out.println("\nORIGINAL CHART");
-		System.out.println("Process \tArrival Time \tBurst Time \tPriority");	
-		for(int i = 0; i < size; i++){
-			process[i] = i+1;
-			System.out.print(process[i] + "\t\t");	  
-			arrivalTime[i] = input.nextInt();
-			burstTime[i] = input.nextInt();
-			priority[i] = input.nextInt();	  
-		}*/
-		
+	public PP(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue) {
+		this.processID = processID;
+		this.arrivalTime = arrivalTime;
+		this.burstTime = burstTime;
+		this.priority = priority;
+		numOfProcesses = processID.length;
+
+		int[] completionTime = new int[numOfProcesses];
+		int[] waitingTime = new int[numOfProcesses];
+		int[] turnaroundTime = new int[numOfProcesses];
+		int[] responseTime = new int[numOfProcesses];
+		int[] serviceTime = new int[numOfProcesses];
+		int[] fullBurst = burstTime.clone();
+		int[] flag = new int[numOfProcesses];
+
+		for (int i = 0; i < numOfProcesses; i++) {
+			flag[i] = 0;
+		}
+		int st = 0, tot = 0;
+		ArrayList<Integer> list = new ArrayList<Integer>();
+
 		int temp = 0;
-		for (int i = 0; i < size; i++){
-			for (int j = i + 1; j < size; j++){
-				if(arrivalTime[i] > arrivalTime[j]){
-					temp = process[i];
-					process[i] = process[j];
-					process[j] = temp;
-					temp = arrivalTime[i];
-					arrivalTime[i] = arrivalTime[j];
-					arrivalTime[j] = temp;
-					temp = burstTime[i];
-					burstTime[i] = burstTime[j];
-					burstTime[j] = temp;
-					temp = priority[i];
-					priority[i] = priority[j];
-					priority[j] = temp;
-				}
-			}
-		}
-		for (int i = 0; i < size; i++){
-			for (int j = i + 1; j < size; j++){
-				if(priority[i] > priority[j]){
-					temp = process[i];
-					process[i] = process[j];
-					process[j] = temp;
-					temp = arrivalTime[i];
-					arrivalTime[i] = arrivalTime[j];
-					arrivalTime[j] = temp;
-					temp = burstTime[i];
-					burstTime[i] = burstTime[j];
-					burstTime[j] = temp;
-					temp = priority[i];
-					priority[i] = priority[j];
-					priority[j] = temp;
-				}
-			}
-		}
 
-		ArrayList<Integer> p = new ArrayList();
-		ArrayList<Integer> a = new ArrayList();
-		ArrayList<Integer> b = new ArrayList();
-		ArrayList<Integer> pr = new ArrayList();
-		
-/*		
-		System.out.println("\nSORTED 2.0 CHART");
-		System.out.println("Process \tArrival Time \tBurst Time \tPriority");
-*/	
-		for(int i = 0; i < size; i++){
-		//	System.out.println("P" + process[i] + "\t\t" + arrivalTime[i] + "\t\t" + burstTime[i] + "\t\t" + priority[i]);
-			p.add(process[i]);
-			a.add(arrivalTime[i]);
-			b.add(burstTime[i]);
-			pr.add(priority[i]);
-		}
-	
-		int counter = 0;
-		int distance = 15;
-		    System.out.println("\nPP GANTT CHART");
-			ArrayList<Integer> t = new ArrayList();
-			t.add(Collections.min(a));
-			int current = t.get(0);
-			for(int i = 0; i < size; i++){
-					if(a.get(i) == 0){
-						while(counter != a.get(0)){
-							
-							b.set(i, b.get(i)-1);
-							counter++;
-						    p2.add(p.get(i));
-							
-						}
-						current += counter;
-						t.add(current);
-						
+		System.out.println("\nGantt Chart\n");
+		while (true) {
+			int min = 50, c = numOfProcesses;
+			if (tot == numOfProcesses) {
+				System.out.print(" -P" + list.get(0) + "-");
+				System.out.print(" |" + st + "|");
+				// process_ID.add(list.get(0));
+				arrival_time.add(st);
+				break;
+			}
+
+			for (int i = 0; i < numOfProcesses; i++) {
+				if ((arrivalTime[i] <= st) && (flag[i] == 0) && (priority[i] <= min)) {
+					min = priority[i];
+					c = i;
+				}
+			}
+
+			if (c == numOfProcesses) {
+				st++;
+			} else {
+				// System.out.println(st +" P" +processID[c]);
+				process_ID.add(processID[c]);
+				if (!list.contains(processID[c])) {
+					if (list.isEmpty()) {
+						list.add(processID[c]);
+					} else {
+						temp = list.get(0);
+						list.remove(0);
+						list.add(processID[c]);
+						System.out.print(" -P" + temp + "-");
 					}
-			}
-			
 
-			int time = Collections.min(a);
-			while(!p.isEmpty()){
-				time = 0;
-				while(b.get(0)!=0){
-			        b.set(0, b.get(0)-1);
-					time += 1;
-					System.out.print("P" + p.get(0));
-				    p2.add(p.get(0));
-					
-					
+					System.out.print(" |" + st + "|");
+					arrival_time.add(st);
 				}
-				current += time;
-				t.add(current);
-								  	
-				if(b.get(0) == 0){
-				  b.remove(0);
-				  p.remove(0);
+				burstTime[c]--;
+				st++;
+
+				if (burstTime[c] == 0) {
+					completionTime[c] = st;
+					turnaroundTime[c] = completionTime[c] - arrivalTime[c];
+					waitingTime[c] = turnaroundTime[c] - fullBurst[c];
+					serviceTime[c] = waitingTime[c] + arrivalTime[c];
+					responseTime[c] = serviceTime[c] - arrivalTime[c];
+					avgwt += waitingTime[c];
+					avgtt += turnaroundTime[c];
+					avgrt += responseTime[c];
+					flag[c] = 1;
+					tot++;
 				}
 			}
-			
-			
-			
-			
-				System.out.print("   |\n");
-
-		CPUFrame.processLabel = new JLabel[p2.size()];
-		for(int i = 0; i < t.size(); i++){			
-			System.out.print("\t" + t.get(i));
-	
 		}
-		
-		GanttThread ppt = new GanttThread(p2, t);
-			
-		
 
-		
+		System.out.println("SRTF");
+		System.out.println("\n\npid  arrival burst");
+		for (int i = 0; i < numOfProcesses; i++) {
+			System.out.println(processID[i] + "\t" + arrivalTime[i] + "\t" + fullBurst[i]);
+		}
+
+		System.out.println("\naverage waiting time: " + (avgwt / numOfProcesses));
+		System.out.println("average turnaround time:" + (avgtt / numOfProcesses));
+		System.out.println("average response time:" + (avgrt / numOfProcesses));
+
+		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
-
 }

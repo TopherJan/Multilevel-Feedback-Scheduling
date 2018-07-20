@@ -12,7 +12,7 @@ public class FCFS {
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
 
-	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime) {
+	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime, int queue) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
@@ -20,7 +20,7 @@ public class FCFS {
 
 		getInfo();
 		MLFQFrame.processLabel = new JLabel[process_ID.size()];
-		GanttThread ppt = new GanttThread(process_ID, arrival_time);
+		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 
 	public void printInfo(int[] completionTime, int[] serviceTime) {
