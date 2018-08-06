@@ -12,6 +12,7 @@ import java.awt.event.FocusListener;
 import java.awt.event.ActionEvent;
 import javax.swing.SwingConstants;
 import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
@@ -19,7 +20,7 @@ public class MLFQFrame extends JFrame implements ActionListener {
 	private JPanel mainPanel = new JPanel(null);
 	private JPanel tablePanel = new JPanel();
 	private JPanel algoPanel = new JPanel(null);
-	private JPanel infoPanel = new JPanel(null);
+	static JPanel infoPanel = new JPanel();
 	static JPanel ganttPanel = new JPanel(null);
 
 	private JButton startButton = new JButton("START");
@@ -199,25 +200,28 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		q3Label.setBackground(new Color(90, 90, 90));
 		q3Label.setBounds(0, 260, 30, 128);
 
-		qPanel[0].setBackground(Color.DARK_GRAY);
+		qPanel[0].setBackground(Color.GRAY);
 		qPanel[0].setBounds(30, 0, 2000, 128);
 		ganttPanel.add(qPanel[0]);
 
-		qPanel[1].setBackground(Color.DARK_GRAY);
+		qPanel[1].setBackground(Color.GRAY);
 		qPanel[1].setBounds(30, 130, 2000, 128);
 		ganttPanel.add(qPanel[1]);
 
-		qPanel[2].setBackground(Color.DARK_GRAY);
+		qPanel[2].setBackground(Color.GRAY);
 		qPanel[2].setBounds(30, 260, 2000, 128);
 		ganttPanel.add(qPanel[2]);
 
-		// JScrollPane pane1 = new JScrollPane(qPanel[0]);
+		// JScrollPane pane1 = new JScrollPane();
+		// pane1.setPreferredSize(new Dimension(2000,128));
 		// ganttPanel.add(pane1);
-		//
+
 		// JScrollPane pane2 = new JScrollPane(qPanel[1]);
+		// pane2.setPreferredSize(new Dimension(2000,128));
 		// ganttPanel.add(pane2);
 		//
 		// JScrollPane pane3 = new JScrollPane(qPanel[2]);
+		// pane3.setPreferredSize(new Dimension(2000, 128));
 		// ganttPanel.add(pane3);
 
 		queueEnterButton.addActionListener(this);
@@ -302,6 +306,9 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		algoPanel.add(exitButton);
 		exitButton.setBounds(270, 260, 120, 40);
 
+		algorithmDropbox[0].addActionListener(this);
+		algorithmDropbox[1].addActionListener(this);
+		algorithmDropbox[2].addActionListener(this);
 		policyDropbox.addActionListener(this);
 		startButton.addActionListener(this);
 		exitButton.addActionListener(this);
@@ -309,15 +316,16 @@ public class MLFQFrame extends JFrame implements ActionListener {
 	}
 
 	public static void addComponent(JPanel panel, JComponent component, int x1, int y1, int x2, int y2){
-		component.setBounds(x1, y1, x2, y2);
 		panel.add(component);
+		// panel.setLayout(new GridLayout(1,3));
+		component.setBounds(x1, y1, x2, y2);
 		panel.repaint();
 		panel.revalidate();
 	}
 
 	public void createInfo() {
 		infoPanel.setBounds(815, 423, 523, 310);
-		infoPanel.setBackground(Color.DARK_GRAY);
+		// infoPanel.setBackground(Color.GRAY);
 		mainPanel.add(infoPanel);
 	}
 
@@ -338,8 +346,27 @@ public class MLFQFrame extends JFrame implements ActionListener {
 
 	public void resetQueue(){
 		for(int m = 0; m < 3; m++){
+			int ctr = m;
 			algorithmDropbox[m].setSelectedIndex(0);
+			policyDropbox.setSelectedIndex(0);
 			quanTextField[m].setText("Quantum");
+			quanTextField[m].addFocusListener(new FocusListener() {
+				int i = ctr;
+				private boolean showingPlaceholder = true;
+				public void focusGained(FocusEvent e) {
+					if (showingPlaceholder) {
+						showingPlaceholder = false;
+						quanTextField[i].setText("");
+					}
+				}
+
+				public void focusLost(FocusEvent arg0) {
+					if (quanTextField[i].getText().isEmpty()) {
+						quanTextField[i].setText("Quantum");
+						showingPlaceholder = true;
+					}
+				}
+			});
 			algorithmDropbox[m].setEnabled(false);
 			quanTextField[m].setEnabled(false);
 		}
@@ -390,53 +417,94 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		queues = new int[numOfQueues];
 		quantum = new int[numOfQueues];
 
-		int number;
-		for(int m = 1; m <= numOfProcesses; m++){
-			for(int n = 1; n < tableColumn; n++){
-				processID[m-1] = m;
-				try{
-					number = Integer.parseInt(panelHolder[m][n].getText());
-				}catch(NumberFormatException e){
-					number = 0;
-				}
-				if(n == 1){
-					arrivalTime[m-1] = number;
-				}else if (n == 2){
-					burstTime[m-1] = number;
-				}else{
-					priority[m-1] = number;
+		try{
+			for(int m = 1; m <= numOfProcesses; m++){
+				for(int n = 1; n < tableColumn; n++){
+					processID[m-1] = m;
+
+					if(!panelHolder[m][n].getText().isEmpty()){
+						int number = Integer.parseInt(panelHolder[m][n].getText());
+						if(n == 1){
+							arrivalTime[m-1] = number;
+						}else if (n == 2){
+							burstTime[m-1] = number;
+						}else{
+							priority[m-1] = number;
+						}
+
+					}
+					else{
+						JOptionPane.showMessageDialog(this, "Data should not be blank", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 				}
 			}
-		}
+		}catch(Exception e){}
 
 		for(int i = 0; i < numOfQueues; i++){
 			queues[i] = algorithmDropbox[i].getSelectedIndex();
-			try{
-				quantum[i] = Integer.parseInt(quanTextField[i].getText());
-			}catch(NumberFormatException e){
-				quantum[i] = 0;
+			if(policyDropbox.getSelectedIndex() == 1){
+				try{
+					quantum[i] = Integer.parseInt(quanTextField[i].getText());
+				}catch(NumberFormatException e){
+					JOptionPane.showMessageDialog(this, "Please input the quantum!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 			}
 		}
 
+		clearButton.setEnabled(false);
+		queueClearButton.setEnabled(false);
+		startButton.setEnabled(false);
+
 		schedulingAlgo();
+
 	}
 
 	public void schedulingAlgo(){
 		for(int i = 0; i < numOfQueues; i++){
-			if(queues[i] == 0){
-				new FCFS(processID, arrivalTime, burstTime, i);
+			if(policyDropbox.getSelectedIndex() == 0){
+				if(queues[i] == 0){
+					new FCFS(processID, arrivalTime, burstTime, i);
+				}
+				else if(queues[i] == 1){
+					new SJF(processID, arrivalTime, burstTime, i);
+				}
+				else if(queues[i] == 2){
+					new SRTF(processID, arrivalTime, burstTime, i);
+				}
+				else if(queues[i] == 3){
+					new NP(processID, arrivalTime, burstTime, priority, i);
+				}
+				else if(queues[i] == 4){
+					new PP(processID, arrivalTime, burstTime, priority, i);
+				}
+			}else if(policyDropbox.getSelectedIndex() == 1){
+				if(queues[i] == 0){
+					new FCFS(processID, arrivalTime, burstTime, i, quantum[i]);
+				}
+				else if(queues[i] == 1){
+					new SJF(processID, arrivalTime, burstTime, i, quantum[i]);
+				}
+				else if(queues[i] == 2){
+					new SRTF(processID, arrivalTime, burstTime, i, quantum[i]);
+				}
+				else if(queues[i] == 3){
+					new NP(processID, arrivalTime, burstTime, priority, i, quantum[i]);
+				}
+				else if(queues[i] == 4){
+					new PP(processID, arrivalTime, burstTime, priority, i, quantum[i]);
+				}
 			}
-			else if(queues[i] == 1){
-				new SJF(processID, arrivalTime, burstTime, i);
-			}
-			else if(queues[i] == 2){
-				new SRTF(processID, arrivalTime, burstTime, i);
-			}
-			else if(queues[i] == 3){
-				new NP(processID, arrivalTime, burstTime, priority, i);
-			}
-			else if(queues[i] == 4){
-				new PP(processID, arrivalTime, burstTime, priority, i);
+			if(queues[i] == 5){
+				try{
+					new RR(processID, arrivalTime, burstTime, quantum[i], i);
+				}catch(NumberFormatException e){
+					JOptionPane.showMessageDialog(this, "Please input the quantum!", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+					clearButton.setEnabled(true);
+					queueClearButton.setEnabled(true);
+					startButton.setEnabled(true);
+				}
 			}
 		}
 	}
@@ -454,19 +522,28 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		if(event.getSource() == stopButton){
 			resetTable();
 			resetQueue();
-			for(int i = 0; i < numOfQueues; i++){
-				qPanel[i].removeAll();
-				mainPanel.repaint();
-				mainPanel.revalidate();
-			}
-
+			try{
+				for(int i = 0; i < numOfQueues; i++){
+					qPanel[i].removeAll();
+					infoPanel.removeAll();
+					mainPanel.repaint();
+					mainPanel.revalidate();
+				}
+			}catch(Exception e){}
 		}
 
 		if(event.getSource() == enterButton){
 			try{
 				numOfProcesses = Integer.parseInt(processNumField.getText());
-				processNumField.setEnabled(false);
-				enterProcess(numOfProcesses);
+				if(numOfProcesses > 20 || numOfProcesses == 0){
+					if(numOfProcesses == 0)
+					JOptionPane.showMessageDialog(this, "Processes should not be equal to 0", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+					else
+					JOptionPane.showMessageDialog(this, "Processes should not be more than 3", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+				}else{
+					processNumField.setEnabled(false);
+					enterProcess(numOfProcesses);
+				}
 			}catch(NumberFormatException e){
 				numOfProcesses = 0;
 			}
@@ -479,8 +556,15 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		if(event.getSource() == queueEnterButton){
 			try{
 				numOfQueues = Integer.parseInt(queueNumField.getText());
-				queueNumField.setEnabled(false);
-				enterQueue(numOfQueues);
+				if(numOfQueues > 3 || numOfQueues == 0){
+					if(numOfQueues == 0)
+					JOptionPane.showMessageDialog(this, "Queues should not be equal to 0", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+					else
+					JOptionPane.showMessageDialog(this, "Queues should not be more than 3", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+				}else{
+					queueNumField.setEnabled(false);
+					enterQueue(numOfQueues);
+				}
 			}catch(NumberFormatException e){
 				numOfQueues = 0;
 			}
@@ -491,14 +575,28 @@ public class MLFQFrame extends JFrame implements ActionListener {
 		}
 
 		if(event.getSource() == policyDropbox){
-			for(int i = 0; i < numOfQueues; i++){
-				if(policyDropbox.getSelectedIndex() == 1){
-					quanTextField[i].setEnabled(true);
+			try{
+				for(int i = 0; i < numOfQueues; i++){
+					if(policyDropbox.getSelectedIndex() == 1){
+						quanTextField[i].setEnabled(true);
+					}
+					else if(policyDropbox.getSelectedIndex() == 0){
+						quanTextField[i].setEnabled(false);
+					}
 				}
-				else if(policyDropbox.getSelectedIndex() == 0){
-					quanTextField[i].setEnabled(false);
+			}catch(Exception e){}
+		}
+
+		for(int i = 0; i < numOfQueues; i++){
+			try{
+				if((event.getSource() == algorithmDropbox[i]) && (policyDropbox.getSelectedIndex() == 0) ){
+					if(algorithmDropbox[i].getSelectedIndex() == 5){
+						quanTextField[i].setEnabled(true);
+					}else{
+						quanTextField[i].setEnabled(false);
+					}
 				}
-			}
+			}catch(Exception e){}
 		}
 	}
 }

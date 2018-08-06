@@ -7,16 +7,33 @@ public class NP {
 	private int[] arrivalTime;
 	private int[] burstTime;
   private int[] priority;
+	private int queue;
+	private int quantum = -1;
 	private int numOfProcesses;
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
-	float avgwt = 0, avgtt = 0, avgrt = 0;
+	float avgwt = 0, avgta = 0, avgrt = 0;
 
 	public NP(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
     this.priority = priority;
+		this.queue = queue;
+		numOfProcesses = processID.length;
+
+		getAllInfo();
+		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
+	}
+
+	public NP(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue, int quantum) {
+		this.processID = processID;
+		this.arrivalTime = arrivalTime;
+		this.burstTime = burstTime;
+    this.priority = priority;
+		this.queue = queue;
+		this.quantum = quantum;
 		numOfProcesses = processID.length;
 
 		getAllInfo();
@@ -58,7 +75,7 @@ public class NP {
 				turnaroundTime[c] = completionTime[c] - arrivalTime[c];
 				waitingTime[c] = turnaroundTime[c] - burstTime[c];
 				avgwt += waitingTime[c]; // total waiting time
-				avgtt += turnaroundTime[c];
+				avgta += turnaroundTime[c];
 				flag[c] = 1;
 				tot++;
 			}
@@ -94,14 +111,18 @@ public class NP {
 		for (int i = 0; i < numOfProcesses; i++) {
 			System.out.println(processID[i] + "\t" + arrivalTime[i] + "\t" + burstTime[i]);
 		}
-		System.out.println("\naverage waiting time: " + (avgwt / numOfProcesses));
-		System.out.println("average turnaround time:" + (avgtt / numOfProcesses));
-		System.out.println("average response time:" + (avgrt / numOfProcesses));
+		JLabel waitingTime = new JLabel("Average Waiting Time: " + (avgwt / numOfProcesses) +"\n");
+		JLabel turnaroundTime = new JLabel("Average Turnaround Time: " + (avgta / numOfProcesses) +"\n");
+		JLabel responseTime = new JLabel("Average Response Time: " + (avgrt / numOfProcesses) +"\n");
+
+		MLFQFrame.addComponent(MLFQFrame.infoPanel, waitingTime, 829, 430, 500, 50);
+		MLFQFrame.addComponent(MLFQFrame.infoPanel, turnaroundTime, 829, 500, 500, 50);
+		MLFQFrame.addComponent(MLFQFrame.infoPanel, responseTime, 829, 550, 500, 50);
 		createGantt(completionTime, serviceTime, processID);
 	}
 
 	public void createGantt(int[] completionTime, int[] serviceTime, int[] processID) {
-		int ctr = 0;
+		int ctr = 0, quantumCtr = 0;
 		System.out.println("\nGANTT CHART\n");
 
 		for (int i = getMinMax(arrivalTime, 0); i <= getMinMax(completionTime, 1); i++) {
@@ -110,12 +131,22 @@ public class NP {
 			}
 			if (serviceTime[ctr] < i) {
 				process_ID.add(processID[ctr]);
+				burstTime[ctr]--;
 			}
 			if (i == completionTime[ctr]) {
 				arrival_time.add(i);
 				ctr++;
 			}
+			if(quantum > 0){
+				if(quantumCtr == quantum){
+					break;
+				}
+				quantumCtr++;
+			}
 		}
+		System.out.println(Arrays.toString(processID));
+		System.out.println(Arrays.toString(burstTime));
+		System.out.println(Arrays.toString(completionTime));
 	}
 
 	public void sortArray(int[] array, int j) {

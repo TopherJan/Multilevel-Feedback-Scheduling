@@ -5,6 +5,8 @@ public class SRTF {
 	private int[] arrivalTime;
 	private int[] processID;
 	private int[] burstTime;
+	private int quantum;
+	private int queue;
 	private int numOfProcesses;
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
@@ -14,8 +16,24 @@ public class SRTF {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
+		this.queue = queue;
 		numOfProcesses = processID.length;
 
+		printInfo();
+	}
+
+	public SRTF(int[] processID, int[] arrivalTime, int[] burstTime, int queue, int quantum) {
+		this.processID = processID;
+		this.arrivalTime = arrivalTime;
+		this.burstTime = burstTime;
+		this.queue = queue;
+		this.quantum = quantum;
+		numOfProcesses = processID.length;
+
+		printInfo();
+	}
+
+	public void printInfo(){
 		int[] completionTime = new int[numOfProcesses];
 		int[] waitingTime = new int[numOfProcesses];
 		int[] turnaroundTime = new int[numOfProcesses];
