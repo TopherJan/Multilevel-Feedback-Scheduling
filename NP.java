@@ -1,13 +1,17 @@
 import java.util.ArrayList;
 import java.util.*;
+import java.awt.*;
+import javax.swing.*;
 import javax.swing.JLabel;
 
 public class NP {
 	private int[] processID;
 	private int[] arrivalTime;
 	private int[] burstTime;
+	private int[] burstTemp;
   private int[] priority;
-	private int queue;
+	private int queue, lastArrival;
+	private int nextQueue;
 	private int quantum = -1;
 	private int numOfProcesses;
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
@@ -20,10 +24,11 @@ public class NP {
 		this.burstTime = burstTime;
     this.priority = priority;
 		this.queue = queue;
+		burstTemp = burstTime;
 		numOfProcesses = processID.length;
 
 		getAllInfo();
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+		MLFQFrame.processLabel[queue] = new JPanel[process_ID.size()];
 		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 
@@ -34,10 +39,17 @@ public class NP {
     this.priority = priority;
 		this.queue = queue;
 		this.quantum = quantum;
+		burstTemp = burstTime;
+		nextQueue = queue;
+		if(queue != MLFQFrame.numOfQueues - 1){
+			nextQueue++;
+		}else{
+			nextQueue = 0;
+		}
 		numOfProcesses = processID.length;
 
 		getAllInfo();
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+		MLFQFrame.processLabel[queue] = new JPanel[process_ID.size()];
 		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 
@@ -106,47 +118,65 @@ public class NP {
 	}
 
 	public void printInfo(int[] completionTime, int[] serviceTime) {
-		System.out.println("NP\n");
-		System.out.println("\npid  arrival burst");
-		for (int i = 0; i < numOfProcesses; i++) {
-			System.out.println(processID[i] + "\t" + arrivalTime[i] + "\t" + burstTime[i]);
-		}
-		JLabel waitingTime = new JLabel("Average Waiting Time: " + (avgwt / numOfProcesses) +"\n");
-		JLabel turnaroundTime = new JLabel("Average Turnaround Time: " + (avgta / numOfProcesses) +"\n");
-		JLabel responseTime = new JLabel("Average Response Time: " + (avgrt / numOfProcesses) +"\n");
+		MLFQFrame.avgwt += avgwt;
+    MLFQFrame.avgta += avgta;
+    MLFQFrame.avgrt += avgrt;
 
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, waitingTime, 829, 430, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, turnaroundTime, 829, 500, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, responseTime, 829, 550, 500, 50);
 		createGantt(completionTime, serviceTime, processID);
 	}
 
 	public void createGantt(int[] completionTime, int[] serviceTime, int[] processID) {
 		int ctr = 0, quantumCtr = 0;
-		System.out.println("\nGANTT CHART\n");
 
 		for (int i = getMinMax(arrivalTime, 0); i <= getMinMax(completionTime, 1); i++) {
 			if (serviceTime[ctr] == i) {
-				arrival_time.add(i);
+				if(queue == 0)
+					MLFQFrame.arrival_time.add(i);
 			}
 			if (serviceTime[ctr] < i) {
-				process_ID.add(processID[ctr]);
-				burstTime[ctr]--;
+				MLFQFrame.process_ID.add(processID[ctr]);
+				burstTemp[ctr]--;
 			}
 			if (i == completionTime[ctr]) {
-				arrival_time.add(i);
+				MLFQFrame.arrival_time.add(i);
 				ctr++;
 			}
 			if(quantum > 0){
 				if(quantumCtr == quantum){
+					MLFQFrame.arrival_time.add(i);
+					lastArrival = i;
 					break;
 				}
 				quantumCtr++;
 			}
 		}
-		System.out.println(Arrays.toString(processID));
-		System.out.println(Arrays.toString(burstTime));
-		System.out.println(Arrays.toString(completionTime));
+
+		try{
+			int counter = 0, temporary = 0;
+			for(int i = 0; i < processID.length; i++){
+				if(burstTemp[i] != 0){
+					counter++;
+				}
+			}
+
+			if(counter == 0){
+				MLFQFrame.isTrue = false;
+				return;
+			}
+
+			MLFQFrame.processID[nextQueue] = new int[counter];
+			MLFQFrame.burstTime[nextQueue] = new int[counter];
+			MLFQFrame.arrivalTime[nextQueue] = new int[counter];
+
+			for(int j = 0; j < processID.length; j++){
+				if(burstTemp[j] != 0){
+					MLFQFrame.processID[nextQueue][temporary] = processID[j];
+					MLFQFrame.arrivalTime[nextQueue][temporary] = lastArrival;
+					MLFQFrame.burstTime[nextQueue][temporary] = burstTime[j];
+					temporary++;
+				}
+			}
+		}catch(ArrayIndexOutOfBoundsException e){ return;}
 	}
 
 	public void sortArray(int[] array, int j) {

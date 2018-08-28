@@ -3,16 +3,18 @@ import javax.swing.JLabel;
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
+
 public class PP {
 	private int[] arrivalTime;
 	private int[] processID;
 	private int[] burstTime;
 	private int[] priority;
 	private int queue, quantum = -1;
+	private int nextQueue, lastArrival;
 	private int numOfProcesses;
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
-	float avgwt = 0, avgtt = 0, avgrt = 0;
+	float avgwt = 0, avgta = 0, avgrt = 0;
 
 	public PP(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue) {
 		this.processID = processID;
@@ -31,6 +33,12 @@ public class PP {
 		this.priority = priority;
 		this.queue = queue;
 		this.quantum = quantum;
+		nextQueue = queue;
+		if(queue != MLFQFrame.numOfQueues - 1){
+			nextQueue++;
+		}else{
+			nextQueue = 0;
+		}
 		numOfProcesses = processID.length;
 		printInfo();
 	}
@@ -52,13 +60,10 @@ public class PP {
 
 		int temp = 0, quantumCtr = 1;
 
-		System.out.println("\nGantt Chart\n");
 		while (true) {
 			int min = 50, c = numOfProcesses;
 			if (tot == numOfProcesses) {
-				System.out.print(" -P" + list.get(0) + "-");
-				System.out.print(" |" + st + "|");
-				arrival_time.add(st);
+				MLFQFrame.arrival_time.add(st);
 				break;
 			}
 
@@ -71,13 +76,14 @@ public class PP {
 
 			if (c == numOfProcesses) {
 				st++;
-			} else {
-				// System.out.println(st +" P" +processID[c]);
-				process_ID.add(processID[c]);
+			}else{
+				MLFQFrame.process_ID.add(processID[c]);
 				burstTime[c]--;
 
 				if(quantum > 0){
 					if(quantumCtr == quantum){
+						MLFQFrame.arrival_time.add(st);
+						lastArrival = st;
 						break;
 					}
 					quantumCtr++;
@@ -89,13 +95,9 @@ public class PP {
 						temp = list.get(0);
 						list.remove(0);
 						list.add(processID[c]);
-						System.out.print(" -P" + temp + "-");
 					}
-
-					System.out.print(" |" + st + "|");
-					arrival_time.add(st);
+					MLFQFrame.arrival_time.add(st);
 				}
-				// burstTime[c]--;
 				st++;
 
 				if (burstTime[c] == 0) {
@@ -105,32 +107,46 @@ public class PP {
 					serviceTime[c] = waitingTime[c] + arrivalTime[c];
 					responseTime[c] = serviceTime[c] - arrivalTime[c];
 					avgwt += waitingTime[c];
-					avgtt += turnaroundTime[c];
+					avgta += turnaroundTime[c];
 					avgrt += responseTime[c];
 					flag[c] = 1;
 					tot++;
 				}
 			}
 		}
-		System.out.println("\n" + Arrays.toString(processID));
-		System.out.println(Arrays.toString(burstTime));
-		System.out.println(Arrays.toString(completionTime));
 
-		System.out.println("PP");
-		System.out.println("\n\npid  arrival burst");
-		for (int i = 0; i < numOfProcesses; i++) {
-			System.out.println(processID[i] + "\t" + arrivalTime[i] + "\t" + fullBurst[i]);
-		}
+		MLFQFrame.avgwt += avgwt;
+    MLFQFrame.avgta += avgta;
+    MLFQFrame.avgrt += avgrt;
 
-		JLabel waiting = new JLabel("\naverage waiting time: " + (avgwt / numOfProcesses));
-		JLabel turnaround = new JLabel("average turnaround time:" + (avgtt / numOfProcesses));
-		JLabel response = new JLabel("average response time:" + (avgrt / numOfProcesses));
+		try{
+			int counter = 0, temporary = 0;
+			for(int i = 0; i < processID.length; i++){
+				if(burstTime[i] != 0){
+					counter++;
+				}
+			}
 
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, waiting, 829, 430, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, turnaround, 829, 500, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, response, 829, 550, 500, 50);
+			if(counter == 0){
+				MLFQFrame.isTrue = false;
+				return;
+			}
 
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+			MLFQFrame.processID[nextQueue] = new int[counter];
+			MLFQFrame.burstTime[nextQueue] = new int[counter];
+			MLFQFrame.arrivalTime[nextQueue] = new int[counter];
+
+			for(int j = 0; j < processID.length; j++){
+				if(burstTime[j] != 0){
+					MLFQFrame.processID[nextQueue][temporary] = processID[j];
+					MLFQFrame.arrivalTime[nextQueue][temporary] = lastArrival;
+					MLFQFrame.burstTime[nextQueue][temporary] = burstTime[j];
+					temporary++;
+				}
+			}
+		}catch(ArrayIndexOutOfBoundsException e){ return;}
+
+		MLFQFrame.processLabel[queue] = new JPanel[process_ID.size()];
 		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 }

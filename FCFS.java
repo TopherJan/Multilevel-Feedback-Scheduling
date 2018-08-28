@@ -1,54 +1,62 @@
 import java.util.ArrayList;
 import java.util.*;
+import java.awt.*;
+import javax.swing.*;
 import javax.swing.JLabel;
 
 public class FCFS {
 	private int[] processID;
 	private int[] arrivalTime;
 	private int[] burstTime;
+	private int[] priority;
+	private int queue, lastArrival;
 	private int quantum = -1;
 	private int numOfProcesses;
+	private int nextQueue;
 	float avgwt = 0, avgta = 0, avgrt = 0;
 
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
 
-	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime, int queue) {
+	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
+		this.priority = priority;
 		numOfProcesses = processID.length;
 
 		getInfo();
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
-		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
+		MLFQFrame.processLabel[queue] = new JPanel[process_ID.size()];
 	}
 
-	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime, int queue, int quantum) {
+	public FCFS(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue, int quantum) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
+		this.priority = priority;
 		this.quantum = quantum;
+		this.queue = queue;
+		nextQueue = queue;
 		numOfProcesses = processID.length;
+		if(queue != (MLFQFrame.numOfQueues-1)){
+			nextQueue++;
+		}else{
+			nextQueue = 0;
+		}
 
 		getInfo();
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
-		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 
 	public void printInfo(int[] completionTime, int[] serviceTime) {
-		System.out.println("FCFS\n");
-		System.out.println("\npid  arrival  burst");
-		for (int i = 0; i < numOfProcesses; i++) {
-			System.out.println(processID[i] + "\t " + arrivalTime[i] + "\t" + burstTime[i]);
-		}
-		JLabel waitingTime = new JLabel("Average Waiting Time: " + (avgwt / numOfProcesses));
-		JLabel turnaroundTime = new JLabel("Average Turnaround Time: " + (avgta / numOfProcesses));
-		JLabel responseTime = new JLabel("Average Response Time: " + (avgrt / numOfProcesses));
+		// System.out.println("FCFS\n");
+		// System.out.println("\npid  arrival  burst");
+		// for (int i = 0; i < numOfProcesses; i++) {
+		// 	System.out.println(processID[i] + "\t " + arrivalTime[i] + "\t" + burstTime[i]);
+		// }
+    MLFQFrame.avgwt += avgwt;
+    MLFQFrame.avgta += avgta;
+    MLFQFrame.avgrt += avgrt;
 
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, waitingTime, 829, 430, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, turnaroundTime, 829, 500, 500, 50);
-		MLFQFrame.addComponent(MLFQFrame.infoPanel, responseTime, 829, 550, 500, 50);
 		createGantt(completionTime, serviceTime, processID);
 	}
 
@@ -65,6 +73,7 @@ public class FCFS {
 					sortArray(arrivalTime, j);
 					sortArray(burstTime, j);
 					sortArray(processID, j);
+					sortArray(priority, j);
 				}
 			}
 		}
@@ -90,30 +99,59 @@ public class FCFS {
 	}
 
 	public void createGantt(int[] completionTime, int[] serviceTime, int[] processID) {
-		int ctr = 0, quantumCtr = 0;
-		System.out.println("\nGANTT CHART\n");
+		int ctr = 0, quantumCtr = 1;
 		for (int i = getMinMax(arrivalTime, 0); i <= getMinMax(completionTime, 1); i++) {
 			if (serviceTime[ctr] == i) {
-				arrival_time.add(i);
+				if(queue == 0)
+					MLFQFrame.arrival_time.add(i);
 			}
 			if (serviceTime[ctr] < i) {
-				process_ID.add(processID[ctr]);
+				MLFQFrame.process_ID.add(processID[ctr]);
 				burstTime[ctr]--;
 			}
 			if (i == completionTime[ctr]) {
-				arrival_time.add(i);
+				MLFQFrame.arrival_time.add(i);
 				ctr++;
 			}
 			if(quantum > 0){
 				if(quantumCtr == quantum){
+          MLFQFrame.arrival_time.add(i);
+					lastArrival = i;
 					break;
 				}
 				quantumCtr++;
 			}
 		}
 
-		System.out.println(Arrays.toString(processID));
-		System.out.println(Arrays.toString(burstTime));
+		try{
+			int counter = 0, temporary = 0;
+			for(int i = 0; i < processID.length; i++){
+				if(burstTime[i] != 0){
+					counter++;
+				}
+			}
+
+			if(counter == 0){
+				MLFQFrame.isTrue = false;
+				return;
+			}
+
+			MLFQFrame.processID[nextQueue] = new int[counter];
+			MLFQFrame.burstTime[nextQueue] = new int[counter];
+			MLFQFrame.arrivalTime[nextQueue] = new int[counter];
+			MLFQFrame.priority[nextQueue] = new int[counter];
+
+			for(int j = 0; j < processID.length; j++){
+				if(burstTime[j] != 0){
+					MLFQFrame.processID[nextQueue][temporary] = processID[j];
+					MLFQFrame.arrivalTime[nextQueue][temporary] = lastArrival;
+					MLFQFrame.burstTime[nextQueue][temporary] = burstTime[j];
+					MLFQFrame.priority[nextQueue][temporary] = priority[j];
+					temporary++;
+				}
+			}
+		}catch(ArrayIndexOutOfBoundsException e){ return;}
+
 	}
 
 	public void sortArray(int[] array, int j) {

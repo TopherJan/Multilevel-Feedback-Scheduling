@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
@@ -13,38 +14,42 @@ public class GanttThread extends Thread {
 
     ArrayList<Integer> arr;
     ArrayList<Integer> t;
-    JLabel[] timeLabel;
 
     int distance = 15;
     int index = 0;
     int queue;
 
     public GanttThread(ArrayList<Integer> arr, ArrayList<Integer> t, int queue){
-      this.start();
       this.arr = arr;
       this.t = t;
-      timeLabel = new JLabel[t.size()];
+      // timeLabel = new JLabel[t.size()];
       this.queue = queue;
+      this.start();
     }
 
     public void run(){
-
-      for(int x = 0; x < arr.size(); x++){
+      for(int x =  0; x < arr.size(); x++){
         try{
-          while(index != t.size()){
-            timeLabel[index] = new JLabel("" + t.get(index), SwingConstants.CENTER);
-            MLFQFrame.addComponent(MLFQFrame.qPanel[queue], timeLabel[index], distance*t.get(index),65, 16, 75);
-            index++;
-          }
-          MLFQFrame.processLabel[x] = new JLabel("P" + arr.get(x), SwingConstants.CENTER);
-          MLFQFrame.processLabel[x].setFont(new Font("Calibri", Font.PLAIN, 10));
-          MLFQFrame.processLabel[x].setBackground(col[arr.get(x)-1]);
-          MLFQFrame.processLabel[x].setOpaque(true);
-          MLFQFrame.addComponent(MLFQFrame.qPanel[queue], MLFQFrame.processLabel[x], distance, 20, 16, 75);
-          distance += 18;
+          // while(index != t.size()){
+          //   timeLabel[index] = new JLabel("" + t.get(index), SwingConstants.CENTER);
+          //   MLFQFrame.addComponent(MLFQFrame.timePanel, timeLabel[index], distance*t.get(index),65, 16, 65);
+          //   index++;
+          // }
+
+          MLFQFrame.processLabel[queue][x] = new JPanel(null);
+          MLFQFrame.processLabel[queue][x].setPreferredSize(new Dimension(20, 50));
+          JLabel p = new JLabel("P" + arr.get(x), SwingConstants.CENTER);
+          p.setBounds(0, 0, 15, 45);
+          MLFQFrame.processLabel[queue][x].add(p);
+          MLFQFrame.processLabel[queue][x].setFont(new Font("Calibri", Font.PLAIN, 10));
+          MLFQFrame.processLabel[queue][x].setBackground(col[arr.get(x)-1]);
+          MLFQFrame.processLabel[queue][x].setOpaque(true);
+          MLFQFrame.addComponent(MLFQFrame.processPanel, MLFQFrame.processLabel[queue][x], distance, 20, 16, 65);
           Thread.sleep(100);
-        }catch(Exception e){
+          distance += 18;
+        }catch(Exception e){}
+          MLFQFrame.qPanel.add(MLFQFrame.processPanel);//(MLFQFrame.qPanel, MLFQFrame.processPanel, 0, 0, 1000, 70);
         }
+        MLFQFrame.qPanel.add(MLFQFrame.timePanel);//(MLFQFrame.qPanel, MLFQFrame.timePanel, 0, 80, 1000, 50);
       }
     }
-  }

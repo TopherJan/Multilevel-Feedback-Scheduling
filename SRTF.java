@@ -1,33 +1,46 @@
 import java.util.ArrayList;
 import javax.swing.JLabel;
+import java.util.*;
+import java.awt.*;
+import javax.swing.*;
 
 public class SRTF {
 	private int[] arrivalTime;
 	private int[] processID;
 	private int[] burstTime;
-	private int quantum;
-	private int queue;
+	private int[] priority;
+	private int quantum = -1;
+	private int queue, lastArrival;
+	private int nextQueue;
 	private int numOfProcesses;
 	private ArrayList<Integer> process_ID = new ArrayList<Integer>();
 	private ArrayList<Integer> arrival_time = new ArrayList<Integer>();
-	float avgwt = 0, avgtt = 0, avgrt = 0;
+	float avgwt = 0, avgta = 0, avgrt = 0;
 
-	public SRTF(int[] processID, int[] arrivalTime, int[] burstTime, int queue) {
+	public SRTF(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
+		this.priority = priority;
 		this.queue = queue;
 		numOfProcesses = processID.length;
 
 		printInfo();
 	}
 
-	public SRTF(int[] processID, int[] arrivalTime, int[] burstTime, int queue, int quantum) {
+	public SRTF(int[] processID, int[] arrivalTime, int[] burstTime, int[] priority, int queue, int quantum) {
 		this.processID = processID;
 		this.arrivalTime = arrivalTime;
 		this.burstTime = burstTime;
+		this.priority = priority;
 		this.queue = queue;
 		this.quantum = quantum;
+		nextQueue = queue;
+		if(queue != MLFQFrame.numOfQueues - 1){
+			nextQueue++;
+		}else{
+			nextQueue = 0;
+		}
 		numOfProcesses = processID.length;
 
 		printInfo();
@@ -48,16 +61,12 @@ public class SRTF {
 		int st = 0, tot = 0;
 		ArrayList<Integer> list = new ArrayList<Integer>();
 
-		int temp = 0;
+		int temp = 0, quantumCtr = 1;
 
-		System.out.println("\nGantt Chart\n");
 		while (true) {
 			int min = 50, c = numOfProcesses;
 			if (tot == numOfProcesses) {
-				System.out.print(" -P" + list.get(0) + "-");
-				System.out.print(" |" + st + "|");
-				// process_ID.add(list.get(0));
-				arrival_time.add(st);
+				MLFQFrame.arrival_time.add(st);
 				break;
 			}
 
@@ -71,8 +80,7 @@ public class SRTF {
 			if (c == numOfProcesses) {
 				st++;
 			} else {
-				// System.out.println(st +" P" +processID[c]);
-				process_ID.add(processID[c]);
+				MLFQFrame.process_ID.add(processID[c]);
 				if (!list.contains(processID[c])) {
 					if (list.isEmpty()) {
 						list.add(processID[c]);
@@ -80,14 +88,21 @@ public class SRTF {
 						temp = list.get(0);
 						list.remove(0);
 						list.add(processID[c]);
-						System.out.print(" -P" + temp + "-");
 					}
 
-					System.out.print(" |" + st + "|");
-					arrival_time.add(st);
+					MLFQFrame.arrival_time.add(st);
 				}
 				burstTime[c]--;
 				st++;
+
+				if(quantum > 0){
+					if(quantumCtr == quantum){
+						MLFQFrame.arrival_time.add(st);
+						lastArrival = st;
+						break;
+					}
+					quantumCtr++;
+				}
 
 				if (burstTime[c] == 0) {
 					completionTime[c] = st;
@@ -96,7 +111,7 @@ public class SRTF {
 					serviceTime[c] = waitingTime[c] + arrivalTime[c];
 					responseTime[c] = serviceTime[c] - arrivalTime[c];
 					avgwt += waitingTime[c];
-					avgtt += turnaroundTime[c];
+					avgta += turnaroundTime[c];
 					avgrt += responseTime[c];
 					flag[c] = 1;
 					tot++;
@@ -104,17 +119,39 @@ public class SRTF {
 			}
 		}
 
-		System.out.println("SRTF");
-		System.out.println("\n\npid  arrival burst");
-		for (int i = 0; i < numOfProcesses; i++) {
-			System.out.println(processID[i] + "\t" + arrivalTime[i] + "\t" + fullBurst[i]);
-		}
+		MLFQFrame.avgwt += avgwt;
+		MLFQFrame.avgta += avgta;
+		MLFQFrame.avgrt += avgrt;
 
-		System.out.println("\naverage waiting time: " + (avgwt / numOfProcesses));
-		System.out.println("average turnaround time:" + (avgtt / numOfProcesses));
-		System.out.println("average response time:" + (avgrt / numOfProcesses));
+		try{
+			int counter = 0, temporary = 0;
+			for(int i = 0; i < processID.length; i++){
+				if(burstTime[i] != 0){
+					counter++;
+				}
+			}
 
-		MLFQFrame.processLabel = new JLabel[process_ID.size()];
+			if(counter == 0){
+				MLFQFrame.isTrue = false;
+				return;
+			}
+
+			MLFQFrame.processID[nextQueue] = new int[counter];
+			MLFQFrame.burstTime[nextQueue] = new int[counter];
+			MLFQFrame.arrivalTime[nextQueue] = new int[counter];
+			MLFQFrame.priority[nextQueue] = new int[counter];
+
+			for(int j = 0; j < processID.length; j++){
+				if(burstTime[j] != 0){
+					MLFQFrame.processID[nextQueue][temporary] = processID[j];
+					MLFQFrame.arrivalTime[nextQueue][temporary] = lastArrival;
+					MLFQFrame.burstTime[nextQueue][temporary] = burstTime[j];
+					temporary++;
+				}
+			}
+		}catch(ArrayIndexOutOfBoundsException e){ return;}
+
+		MLFQFrame.processLabel[queue] = new JPanel[process_ID.size()];
 		GanttThread ppt = new GanttThread(process_ID, arrival_time, queue);
 	}
 }
